@@ -412,10 +412,98 @@ const AODepthShader = {
 			#endif
 		}
 
-		void main() {
-			float depth = getLinearDepth( vUv );
-			gl_FragColor = vec4( vec3( 1.0 - depth ), 1.0 );
+		vec3 HUEtoRGB(in float H) {
+    		float R = abs(H * 6.0 - 3.0) - 1.0;
+    		float G = 2.0 - abs(H * 6.0 - 2.0);
+    		float B = 2.0 - abs(H * 6.0 - 4.0);
+    		return clamp( vec3(R,G,B), 0.0, 1.0 );
+		}
 
+		void main() {
+			float depth = getLinearDepth(vUv);
+			//gl_FragColor = vec4(HUEtoRGB(1.0 - depth), 1.0);
+			gl_FragColor = vec4(vec3(1.0 - depth) * HUEtoRGB(1.0 - depth), 1.0);
+		}`
+
+};
+
+const AODepthToNormalShader = {
+
+	name: 'HBAODepthShader',
+
+	defines: {
+		PERSPECTIVE_CAMERA: 1,
+		DEPTH_SWIZZLING: 'x'
+	},
+
+	uniforms: {
+		tDepth: { value: null },
+		cameraProjectionMatrixInverse: { value: new Matrix4() },
+	},
+
+	vertexShader: /* glsl */`
+		varying vec2 vUv;
+
+		void main() {
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		}`,
+
+	fragmentShader: /* glsl */`
+		varying vec2 vUv;
+		uniform sampler2D tDepth;
+		uniform mat4 cameraProjectionMatrixInverse;		
+
+		#ifndef DEPTH_SWIZZLING
+		#define DEPTH_SWIZZLING x
+		#endif
+
+		#ifndef FRAGMENT_OUTPUT
+		#define FRAGMENT_OUTPUT vec4(vec3(normal) * 0.5 + 0.5, depth)
+		#endif
+
+		vec3 getViewPosition(const in vec2 screenPosition, const in float depth) {
+			vec4 clipSpacePosition = vec4(vec3(screenPosition, depth) * 2.0 - 1.0, 1.0);
+			vec4 viewSpacePosition = cameraProjectionMatrixInverse * clipSpacePosition;
+			return viewSpacePosition.xyz / viewSpacePosition.w;
+		}
+
+		float getDepth(const vec2 uv) {  
+			return textureLod(tDepth, uv.xy, 0.0).DEPTH_SWIZZLING;
+		}
+
+		float fetchDepth(const ivec2 uv) {   
+			return texelFetch(tDepth, uv.xy, 0).DEPTH_SWIZZLING;
+		}
+
+		vec3 computeNormalFromDepth(const vec2 uv) {
+            vec2 size = vec2(textureSize(tDepth, 0));
+            ivec2 p = ivec2(uv * size);
+            float c0 = fetchDepth(p);
+            float l2 = fetchDepth(p - ivec2(2, 0));
+            float l1 = fetchDepth(p - ivec2(1, 0));
+            float r1 = fetchDepth(p + ivec2(1, 0));
+            float r2 = fetchDepth(p + ivec2(2, 0));
+            float b2 = fetchDepth(p - ivec2(0, 2));
+            float b1 = fetchDepth(p - ivec2(0, 1));
+            float t1 = fetchDepth(p + ivec2(0, 1));
+            float t2 = fetchDepth(p + ivec2(0, 2));
+            float dl = abs((2.0 * l1 - l2) - c0);
+            float dr = abs((2.0 * r1 - r2) - c0);
+            float db = abs((2.0 * b1 - b2) - c0);
+            float dt = abs((2.0 * t1 - t2) - c0);
+            vec3 ce = getViewPosition(uv, c0).xyz;
+            vec3 dpdx = (dl < dr) ?  ce - getViewPosition((uv - vec2(1.0 / size.x, 0.0)), l1).xyz
+                                  : -ce + getViewPosition((uv + vec2(1.0 / size.x, 0.0)), r1).xyz;
+            vec3 dpdy = (db < dt) ?  ce - getViewPosition((uv - vec2(0.0, 1.0 / size.y)), b1).xyz
+                                  : -ce + getViewPosition((uv + vec2(0.0, 1.0 / size.y)), t1).xyz;
+            return normalize(cross(dpdx, dpdy));
+		}
+
+		void main() {
+			float depth = getDepth(vUv.xy);
+			vec3 normal = computeNormalFromDepth(vUv);
+			gl_FragColor = FRAGMENT_OUTPUT;
 		}`
 
 };
@@ -580,4 +668,4 @@ function generateMagicSquare( size ) {
 }
 
 
-export { generateAoSampleKernelInitializer, generateMagicSquareNoise, AOShader, AODepthShader, AoBlendShader };
+export { generateAoSampleKernelInitializer, generateMagicSquareNoise, AOShader, AoBlendShader, AODepthToNormalShader, AODepthShader };

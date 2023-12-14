@@ -55,8 +55,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xbfe3dd );
 scene.environment = pmremGenerator.fromScene( new RoomEnvironment( renderer ), 0.04 ).texture;
 
-const camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 100 );
-camera.position.set( -8, 1.5, 0 );
+const camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 40 );
+camera.position.set( -10, 1.5, 0 );
 
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.target.set( 0, 1.5, 0 );
@@ -99,8 +99,8 @@ gui.add( aoPass, 'output', {
     'Diffuse': AOPass.OUTPUT.Diffuse,
     'AO Only': AOPass.OUTPUT.AO,
     'AO Only + Denoise': AOPass.OUTPUT.Denoise,
-    //'Depth': AOPass.OUTPUT.Depth,
-    //'Normal': AOPass.OUTPUT.Normal
+    'Depth': AOPass.OUTPUT.Depth,
+    'Normal': AOPass.OUTPUT.Normal
 } ).onChange( function ( value ) {
 
     aoPass.output = value;

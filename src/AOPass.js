@@ -22,7 +22,7 @@ import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js'
 import { generatePdSamplePointInitializer, PoissonDenoiseShader } from 'three/examples/jsm/shaders/PoissonDenoiseShader.js';
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
-import { generateAoSampleKernelInitializer, generateMagicSquareNoise, AOShader, AODepthShader, AoBlendShader } from './AOShader.js';
+import { generateAoSampleKernelInitializer, generateMagicSquareNoise, AOShader, AoBlendShader, AODepthToNormalShader, AODepthShader } from './AOShader.js';
 
 class AOPass extends Pass {
 
@@ -37,6 +37,7 @@ class AOPass extends Pass {
 		this.scene = scene;
 		this.output = 0;
 		this._renderGBuffer = true;
+		this._renderNormalFromDepth = false;
 		this._visibilityCache = new Map();
 		this.intensity = 1.;
 
@@ -63,11 +64,17 @@ class AOPass extends Pass {
 		this.aoMaterial.definesPERSPECTIVE_CAMERA = this.camera.isPerspectiveCamera ? 1 : 0;
 		this.aoMaterial.uniforms.tNoise.value = this.aoNoiseTextureMagicSquare;
 		this.aoMaterial.uniforms.resolution.value.set( this.width, this.height );
-		this.aoMaterial.uniforms.cameraNear.value = this.camera.near;
-		this.aoMaterial.uniforms.cameraFar.value = this.camera.far;
 
 		this.normalMaterial = new MeshNormalMaterial();
 		this.normalMaterial.blending = NoBlending;
+
+		this.depthToNormalRenderMaterial = new ShaderMaterial( {
+			defines: Object.assign( {}, AODepthToNormalShader.defines ),
+			uniforms: UniformsUtils.clone( AODepthToNormalShader.uniforms ),
+			vertexShader: AODepthToNormalShader.vertexShader,
+			fragmentShader: AODepthToNormalShader.fragmentShader,
+			blending: NoBlending
+		} );
 
 		this.pdMaterial = new ShaderMaterial( {
 			defines: Object.assign( {}, PoissonDenoiseShader.defines ),
@@ -84,16 +91,6 @@ class AOPass extends Pass {
 		this.pdMaterial.uniforms.depthPhi.value = 2;
 		this.pdMaterial.uniforms.normalPhi.value = 3;
 		this.pdMaterial.uniforms.radius.value = 4;
-
-		this.depthRenderMaterial = new ShaderMaterial( {
-			defines: Object.assign( {}, AODepthShader.defines ),
-			uniforms: UniformsUtils.clone( AODepthShader.uniforms ),
-			vertexShader: AODepthShader.vertexShader,
-			fragmentShader: AODepthShader.fragmentShader,
-			blending: NoBlending
-		} );
-		this.depthRenderMaterial.uniforms.cameraNear.value = this.camera.near;
-		this.depthRenderMaterial.uniforms.cameraFar.value = this.camera.far;
 
 		this.copyMaterial = new ShaderMaterial( {
 			uniforms: UniformsUtils.clone( CopyShader.uniforms ),
@@ -125,6 +122,16 @@ class AOPass extends Pass {
 			blendDstAlpha: ZeroFactor,
 			blendEquationAlpha: AddEquation
 		} );
+
+		this.depthRenderMaterial = new ShaderMaterial( {
+			defines: Object.assign( {}, AODepthShader.defines ),
+			uniforms: UniformsUtils.clone( AODepthShader.uniforms ),
+			vertexShader: AODepthShader.vertexShader,
+			fragmentShader: AODepthShader.fragmentShader,
+			blending: NoBlending
+		} );
+		this.depthRenderMaterial.uniforms.cameraNear.value = this.camera.near;
+		this.depthRenderMaterial.uniforms.cameraFar.value = this.camera.far;
 
 		this.fsQuad = new FullScreenQuad( null );
 
@@ -164,7 +171,19 @@ class AOPass extends Pass {
 
 	setGBuffer( depthTexture, normalTexture ) {
 
-		if ( depthTexture !== undefined ) {
+		if ( depthTexture !== undefined && normalTexture === undefined ) {
+
+			this.depthTexture = depthTexture;
+			this.normalRenderTarget = new WebGLRenderTarget( this.width, this.height, {
+				minFilter: NearestFilter,
+				magFilter: NearestFilter,
+				type: HalfFloatType
+			} );
+			this.normalTexture = this.normalRenderTarget.texture;
+			this._renderGBuffer = false;
+			this._renderNormalFromDepth = true;
+
+		} else if ( depthTexture !== undefined ) {
 
 			this.depthTexture = depthTexture;
 			this.normalTexture = normalTexture;
@@ -378,6 +397,12 @@ class AOPass extends Pass {
 			this.renderOverride( renderer, this.normalMaterial, this.normalRenderTarget, 0x7777ff, 1.0 );
 			this.restoreVisibility();
 
+		} else if ( this._renderNormalFromDepth ) {
+
+			this.depthToNormalRenderMaterial.uniforms.tDepth.value = this.depthTexture;
+			this.depthToNormalRenderMaterial.uniforms.cameraProjectionMatrixInverse.value.copy( this.camera.projectionMatrixInverse );
+			this.renderPass( renderer, this.depthToNormalRenderMaterial, this.normalRenderTarget, 0x000000, 1.0 );
+
 		}
 
 		// render AO
@@ -424,6 +449,7 @@ class AOPass extends Pass {
 
 			case AOPass.OUTPUT.Depth:
 
+				this.depthRenderMaterial.uniforms.tDepth.value = this.depthTexture;
 				this.depthRenderMaterial.uniforms.cameraNear.value = this.camera.near;
 				this.depthRenderMaterial.uniforms.cameraFar.value = this.camera.far;
 				this.renderPass( renderer, this.depthRenderMaterial, this.renderToScreen ? null : writeBuffer );
