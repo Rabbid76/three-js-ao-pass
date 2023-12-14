@@ -116,8 +116,6 @@ const aoParameters = {
     bias: 0.001,
     scale: 1.,
     samples: 24,
-    clipRangeCheck: true,
-    depthRelativeBias: false,
     nvAlignedSamples: false,
     screenSpaceRadius: false,
     aoNoiseType: 'magic-square',
@@ -156,9 +154,9 @@ gui.add( aoParameters, 'scale' ).min( 0.01 ).max( 2.0 ).step( 0.01 ).onChange( (
 gui.add( aoParameters, 'samples' ).min( 2 ).max( 64 ).step( 1 ).onChange( () => aoPass.updateAoMaterial( aoParameters ) );
 const nvAlignedSamplesController = gui.add( aoParameters, 'nvAlignedSamples' ).onChange( () => aoPass.updateAoMaterial( aoParameters ) );
 gui.add( aoParameters, 'screenSpaceRadius' ).onChange( () => aoPass.updateAoMaterial( aoParameters ) );
+gui.add( aoParameters, 'aoNoiseType', [ 'magic-square', 'random' ] ).onChange( () => aoPass.updateAoMaterial( aoParameters ) );
 const poissonDenoiseFolder = gui.addFolder('Poisson denoise');
 poissonDenoiseFolder.close();
-poissonDenoiseFolder.add( aoParameters, 'aoNoiseType', [ 'magic-square', 'random' ] ).onChange( () => aoPass.updateAoMaterial( aoParameters ) );
 poissonDenoiseFolder.add( pdParameters, 'lumaPhi' ).min( 0 ).max( 20 ).step( 0.01 ).onChange( () => aoPass.updatePdMaterial( pdParameters ) );
 poissonDenoiseFolder.add( pdParameters, 'depthPhi' ).min( 0.01 ).max( 20 ).step( 0.01 ).onChange( () => aoPass.updatePdMaterial( pdParameters ) );
 poissonDenoiseFolder.add( pdParameters, 'normalPhi' ).min( 0.01 ).max( 20 ).step( 0.01 ).onChange( () => aoPass.updatePdMaterial( pdParameters ) );
