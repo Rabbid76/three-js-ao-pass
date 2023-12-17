@@ -2,6 +2,8 @@
 
 [Demo example](https://rabbid76.github.io/three-js-ao-pass/dist/)
 
+![AOPass](./screenshot/AOPass.png)
+
 ## References
 
 - Screen Space Ambient Occlusion (SSAO), see also SSAOShader.js

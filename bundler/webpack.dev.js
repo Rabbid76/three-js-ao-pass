@@ -8,26 +8,11 @@ module.exports = merge(
     {
         stats: 'errors-warnings',
         mode: 'development',
-        devServer:
-        {
-            host: 'local-ip',
-            port: portFinderSync.getPort(8080),
-            open: true,
-            https: false,
-            allowedHosts: 'all',
-            hot: false,
-            watchFiles: ['src/**', 'static/**'],
-            static:
-            {
-                watch: true,
-                directory: path.join(__dirname, '../static')
+        devServer: {
+            static: {
+                directory: path.join(__dirname, '../../dist/client'),
             },
-            client:
-            {
-                logging: 'none',
-                overlay: true,
-                progress: false
-            }
-        }
+            hot: true,
+        },
     }
 )

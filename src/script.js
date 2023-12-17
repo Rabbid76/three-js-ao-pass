@@ -45,7 +45,7 @@ document.body.appendChild( container );
 const stats = new Stats();
 container.appendChild( stats.dom );
 
-const renderer = new THREE.WebGLRenderer( { canvas: three_canvas, antialias: true } );
+const renderer = new THREE.WebGLRenderer( { canvas: three_canvas, antialias: true, preserveDrawingBuffer: true, } );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
@@ -165,9 +165,7 @@ poissonDenoiseFolder.add( pdParameters, 'radiusExponent' ).min( 0.1 ).max( 4. ).
 poissonDenoiseFolder.add( pdParameters, 'rings' ).min( 1 ).max( 16 ).step( 0.125 ).onChange( () => aoPass.updatePdMaterial( pdParameters ) );
 poissonDenoiseFolder.add( pdParameters, 'samples' ).min( 2 ).max( 32 ).step( 1 ).onChange( () => aoPass.updatePdMaterial( pdParameters ) );
 
-window.addEventListener( 'resize', onWindowResize );
-
-function onWindowResize() {
+const onWindowResize = () => {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -179,8 +177,19 @@ function onWindowResize() {
     composer.setSize( width, height );
 
 }
+window.addEventListener( 'resize', onWindowResize );
 
-function animate() {
+const saveButton = document.getElementById('save-button');
+const saveDocumentLink = document.createElement('a');
+if (saveButton) {
+  saveButton.onclick = () => {
+    saveDocumentLink.href = renderer.domElement.toDataURL();
+    saveDocumentLink.download = 'AOPass.png';
+    saveDocumentLink.click();
+  }
+}
+
+const animate = () => {
 
     requestAnimationFrame( animate );
 

@@ -3,20 +3,31 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>three.js Hello Cube</title>
+        <title>three.js AOPass</title>
         <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
         <style>
-        body, html {
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            margin: 0px;
-            padding: 0px;
-        }
+            body, html {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0px;
+                padding: 0px;
+            }
+            #menu-area {
+                position: absolute;
+                bottom: 20px;
+                left: 10px;
+            } 
+            #save-button {
+                left: 10px;
+            } 
         </style>
     </head>
 
     <body>
+        <div id="menu-area">
+            <button id="save-button" type="button">save</button>
+        </div>
         <div id="container">
             <canvas id="three_canvas"> </canvas>
         </div>
