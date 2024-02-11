@@ -10,12 +10,12 @@
 		"dbaeumer.vscode-eslint",
 		"donjayamanne.githistory",
 		"GitHub.codespaces",
-		"GitHub.copilot",
 		"GitHub.vscode-pull-request-github",
 		"mhutchie.git-graph",
 		"streetsidesoftware.code-spell-checker",
 		"waderyan.gitblame",
-		"yzhang.markdown-all-in-one"
+		"yzhang.markdown-all-in-one",
+		"letmaik.git-tree-compare"
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": [
