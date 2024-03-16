@@ -22,14 +22,14 @@
     "html-loader": "^5.0.0",
     "html-webpack-plugin": "^5.6.0",
     "mini-css-extract-plugin": "^2.8.1",
-    "npm-check-updates": "^16.14.15",
+    "npm-check-updates": "^16.14.16",
     "portfinder-sync": "0.0.2",
     "raw-loader": "^4.0.2",
     "style-loader": "^3.3.4",
     "three": "^0.162.0",
     "webpack": "^5.90.3",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.0.2",
+    "webpack-dev-server": "^5.0.3",
     "webpack-merge": "^5.10.0"
   }
 }
