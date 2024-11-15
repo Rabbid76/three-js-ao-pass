@@ -22,7 +22,7 @@
     "html-loader": "^5.1.0",
     "html-webpack-plugin": "^5.6.3",
     "mini-css-extract-plugin": "^2.9.2",
-    "npm-check-updates": "^17.1.10",
+    "npm-check-updates": "^17.1.11",
     "portfinder-sync": "0.0.2",
     "raw-loader": "^4.0.2",
     "style-loader": "^4.0.0",
