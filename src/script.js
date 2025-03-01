@@ -47,6 +47,7 @@ container.appendChild( stats.dom );
 
 const renderer = new THREE.WebGLRenderer( { canvas: three_canvas, antialias: true, preserveDrawingBuffer: true, } );
 renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild( renderer.domElement );
 
 const pmremGenerator = new THREE.PMREMGenerator( renderer );
@@ -68,11 +69,10 @@ generateSponzaScene( scene );
 
 const width = window.innerWidth;
 const height = window.innerHeight;
-const pixelRatio = renderer.getPixelRatio();
 const maxSamples = renderer.capabilities.maxSamples;
 
-const depthTexture = new THREE.DepthTexture();
-const renderTarget = new THREE.WebGLRenderTarget( width * pixelRatio, height * pixelRatio, {
+const depthTexture = new THREE.DepthTexture(width, height);
+const renderTarget = new THREE.WebGLRenderTarget( width, height, {
     type: THREE.HalfFloatType,
     samples: maxSamples,
     depthTexture: depthTexture
@@ -173,6 +173,8 @@ const onWindowResize = () => {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 
+    aoPass.setSize( width, height );
+    renderTarget.setSize( width, height );
     renderer.setSize( width, height );
     composer.setSize( width, height );
 
